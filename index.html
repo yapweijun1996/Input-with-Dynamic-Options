@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Options Input</title>
+    <style>
+      .inputac-container { position: relative; margin-bottom: 10px; }
+      .inputac-suggestions { border: 1px solid #ccc; max-height: 150px; overflow-y: auto; position: absolute; min-width: 200px; background: white; z-index: 999; display: none; }
+      .inputac-suggestion { padding: 8px; cursor: pointer; }
+      .inputac-suggestion:hover { background-color: #f0f0f0; }
+      input[type="text"].inputac { width: 200px; padding: 8px; box-sizing: border-box;}
+      .highlight { background-color: #dcdcdc; }
+    </style>
+  </head>
+  <body>
+
+    <table cellpadding="0" cellspacing="0" style="width:100%;table-layout:fixed;" border="0">
+      <tr>
+        <td style="box-sizing:border-box;width:100px;"></td>
+        <td style="box-sizing:border-box;width:auto;"></td>
+      </tr>
+      <tr>
+        <td style="box-sizing:border-box;">Test 001</td>
+        <td style="box-sizing:border-box;">
+          <input id="select_option1" type="text" class="inputac" placeholder="Type to search..." autocomplete="off">
+          <input id="select_option1_id" type="hidden" >
+          <input id="select_option1_code" type="hidden">
+          <input id="select_option1_desc" type="hidden">
+          <div   id="select_option1_suggestions_container" class="inputac-suggestions"></div>
+        </td>
+      </tr>
+      <tr>
+        <td style="box-sizing:border-box;">Test 002</td>
+        <td style="box-sizing:border-box;">
+          <input id="select_option2" type="text" class="inputac" placeholder="Type to search..." autocomplete="off">
+          <input id="select_option2_id" type="hidden" >
+          <input id="select_option2_code" type="hidden">
+          <input id="select_option2_desc" type="hidden">
+          <div   id="select_option2_suggestions_container" class="inputac-suggestions"></div>
+        </td>
+      </tr>
+      <tr>
+        <td style="box-sizing:border-box;">Test 003</td>
+        <td style="box-sizing:border-box;">
+
+          <input id="select_option3" type="text" class="inputac" placeholder="Type to search..." autocomplete="off">
+          <input id="select_option3_id" type="hidden" >
+          <input id="select_option3_code" type="hidden">
+          <input id="select_option3_desc" type="hidden">
+          <div   id="select_option3_suggestions_container" class="inputac-suggestions"></div>
+        </td>
+      </tr>
+      <tr>
+        <td style="box-sizing:border-box;">Test 004</td>
+        <td style="box-sizing:border-box;">
+
+          <input id="select_option4" type="text" class="inputac" placeholder="Type to search..." autocomplete="off">
+          <input id="select_option4_id" type="hidden" >
+          <input id="select_option4_code" type="hidden">
+          <input id="select_option4_desc" type="hidden">
+          <div   id="select_option4_suggestions_container" class="inputac-suggestions"></div>
+        </td>
+      </tr>
+      <tr>
+        <td style="box-sizing:border-box;">Test 005</td>
+        <td style="box-sizing:border-box;">
+
+          <input id="select_option5" type="text" class="inputac" placeholder="Type to search..." autocomplete="off">
+          <input id="select_option5_id" type="hidden" >
+          <input id="select_option5_code" type="hidden">
+          <input id="select_option5_desc" type="hidden">
+          <div   id="select_option5_suggestions_container" class="inputac-suggestions"></div>
+        </td>
+      </tr>
+    </table>
+
+
+    <script>
+      function initinputac(inputBoxId, defaultQuery = '') {
+        const inputField = document.getElementById(inputBoxId);
+        const index = inputBoxId.slice(-1);  // Extract the index (1 or 2)
+        const hiddenIdField = document.getElementById(inputBoxId + '_id');
+        const hiddenCodeField = document.getElementById(inputBoxId + '_code');
+        const hiddenDescField = document.getElementById(inputBoxId + '_desc');
+        const suggestionsContainer = document.getElementById(inputBoxId + '_suggestions_container');
+        const options = optionsData[inputBoxId];
+
+        if (options) {
+          inputField.addEventListener('focus', () => {
+            // Highlight the text inside the input field when clicked
+            inputField.select();
+
+            // Force the suggestions to display all options
+            suggestionsContainer.style.display = 'block';
+            filterSuggestions('', options, suggestionsContainer);  // Pass empty string to show all options
+          });
+
+          inputField.addEventListener('input', () => {
+            if (!isTextSelected(inputField)) {
+              filterSuggestions(inputField.value, options, suggestionsContainer);
+            }
+          });
+
+          inputField.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+              const filtered = options.filter(option => option.label.toLowerCase().includes(inputField.value.toLowerCase()));
+              if (filtered.length > 0) {
+                const bestMatch = filtered[0];  // Select the first match from filtered suggestions
+                inputField.value = bestMatch.label;
+                hiddenIdField.value = bestMatch.id;
+                hiddenCodeField.value = bestMatch.code;
+                hiddenDescField.value = bestMatch.desc;
+                suggestionsContainer.style.display = 'none';
+              }
+            } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+              navigateSuggestions(event, suggestionsContainer);
+            }
+          });
+
+          function filterSuggestions(query, options, container) {
+            container.innerHTML = '';
+            const filtered = options.filter(option => option.label.toLowerCase().includes(query.toLowerCase()));
+            if (filtered.length) {
+              container.style.display = 'block';
+              filtered.forEach(option => {
+                const suggestion = document.createElement('div');
+                suggestion.classList.add('inputac-suggestion');
+                suggestion.textContent = option.label;
+                suggestion.onclick = () => {
+                  inputField.value = option.label;
+                  hiddenIdField.value = option.id;
+                  hiddenCodeField.value = option.code;
+                  hiddenDescField.value = option.desc;
+                  container.style.display = 'none';
+                };
+                container.appendChild(suggestion);
+              });
+            } else {
+              container.style.display = 'none';
+            }
+          }
+
+          function navigateSuggestions(event, container) {
+            const suggestions = container.querySelectorAll('.inputac-suggestion');
+            let currentIndex = -1;
+            suggestions.forEach((suggestion, index) => {
+              if (suggestion.classList.contains('highlight')) {
+                currentIndex = index;
+                suggestion.classList.remove('highlight');
+              }
+            });
+          }
+
+          function isTextSelected(inputField) {
+            return inputField.selectionStart !== inputField.selectionEnd;
+          }
+
+          document.addEventListener('click', (event) => {
+            if (!inputField.contains(event.target) && !suggestionsContainer.contains(event.target)) {
+              suggestionsContainer.style.display = 'none';
+            }
+          });
+
+          setDefaultValue();
+
+          function setDefaultValue() {
+            if (defaultQuery) {
+              const bestMatch = getBestMatch(defaultQuery, options);
+              if (bestMatch) {
+                inputField.value = bestMatch.label;
+                hiddenIdField.value = bestMatch.id;
+                hiddenCodeField.value = bestMatch.code;
+                hiddenDescField.value = bestMatch.desc;
+                suggestionsContainer.style.display = 'none';
+              }
+            }
+          }
+
+          // Get the best match for the query (partial or full match)
+          function getBestMatch(query, options) {
+            return options.find(option => option.label.toLowerCase().includes(query.toLowerCase()));
+          }
+        }
+      }
+
+      const optionsData = {
+        "select_option1": [
+          { "id": "001", "code": "vo_only", "desc": "Variation Order Only", "label": "Variation Order Only" },
+          { "id": "002", "code": "aw_only", "desc": "Additional Works Only", "label": "Additional Works Only" },
+          { "id": "003", "code": "po_only", "desc": "Purchase Order Only", "label": "Purchase Order Only" },
+          { "id": "004", "code": "so_only", "desc": "Sales Order Only", "label": "Sales Order Only" },
+          { "id": "005", "code": "inv_only", "desc": "Invoice Only", "label": "Invoice Only" }
+          // More options can be added
+        ],
+        "select_option2": [
+          { "id": "001", "code": "apollo_mission", "desc": "Apollo Mission", "label": "Apollo Mission" },
+          { "id": "002", "code": "mars_exploration", "desc": "Mars Exploration", "label": "Mars Exploration" },
+          { "id": "003", "code": "space_station", "desc": "International Space Station (ISS)", "label": "International Space Station (ISS)" },
+          { "id": "004", "code": "moon_base", "desc": "Moon Base Development", "label": "Moon Base Development" },
+          { "id": "005", "code": "satellite_launch", "desc": "Satellite Launch", "label": "Satellite Launch" },
+          { "id": "006", "code": "space_telescopes", "desc": "Space Telescopes", "label": "Space Telescopes" },
+          { "id": "007", "code": "rovers_mars", "desc": "Mars Rover Missions", "label": "Mars Rover Missions" },
+          { "id": "008", "code": "exoplanet_discovery", "desc": "Exoplanet Discovery", "label": "Exoplanet Discovery" },
+          { "id": "009", "code": "heliophysics", "desc": "Heliophysics Research", "label": "Heliophysics Research" },
+          { "id": "010", "code": "lunar_landings", "desc": "Lunar Landings", "label": "Lunar Landings" },
+          { "id": "011", "code": "orbital_science", "desc": "Orbital Science", "label": "Orbital Science" },
+          { "id": "012", "code": "space_walks", "desc": "Space Walks (EVA)", "label": "Space Walks (EVA)" },
+          { "id": "013", "code": "space_missions", "desc": "Space Missions", "label": "Space Missions" },
+          { "id": "014", "code": "nasa_tech_innovation", "desc": "NASA Technological Innovations", "label": "NASA Technological Innovations" },
+          { "id": "015", "code": "deep_space_exploration", "desc": "Deep Space Exploration", "label": "Deep Space Exploration" },
+          { "id": "016", "code": "rocket_development", "desc": "Rocket Development", "label": "Rocket Development" },
+          { "id": "017", "code": "astrobiology", "desc": "Astrobiology Research", "label": "Astrobiology Research" },
+          { "id": "018", "code": "space_education", "desc": "Space Education Programs", "label": "Space Education Programs" },
+          { "id": "019", "code": "commercial_partnerships", "desc": "NASA Commercial Partnerships", "label": "NASA Commercial Partnerships" },
+          // More options can be added
+        ],
+        "select_option3": [
+          { "id": "001", "code": "vo_only", "desc": "Variation Order Only", "label": "Variation Order Only" },
+          { "id": "002", "code": "aw_only", "desc": "Additional Works Only", "label": "Additional Works Only" },
+          { "id": "003", "code": "po_only", "desc": "Purchase Order Only", "label": "Purchase Order Only" },
+          { "id": "004", "code": "so_only", "desc": "Sales Order Only", "label": "Sales Order Only" },
+          { "id": "005", "code": "inv_only", "desc": "Invoice Only", "label": "Invoice Only" }
+          // More options can be added
+        ],
+        "select_option4": [
+          { "id": "001", "code": "vo_only", "desc": "Variation Order Only", "label": "Variation Order Only" },
+          { "id": "002", "code": "aw_only", "desc": "Additional Works Only", "label": "Additional Works Only" },
+          { "id": "003", "code": "po_only", "desc": "Purchase Order Only", "label": "Purchase Order Only" },
+          { "id": "004", "code": "so_only", "desc": "Sales Order Only", "label": "Sales Order Only" },
+          { "id": "005", "code": "inv_only", "desc": "Invoice Only", "label": "Invoice Only" }
+          // More options can be added
+        ],
+        "select_option5": [
+          { "id": "001", "code": "apollo_mission", "desc": "Apollo Mission", "label": "Apollo Mission" },
+          { "id": "002", "code": "mars_exploration", "desc": "Mars Exploration", "label": "Mars Exploration" },
+          { "id": "003", "code": "space_station", "desc": "International Space Station (ISS)", "label": "International Space Station (ISS)" },
+          { "id": "004", "code": "moon_base", "desc": "Moon Base Development", "label": "Moon Base Development" },
+          { "id": "005", "code": "satellite_launch", "desc": "Satellite Launch", "label": "Satellite Launch" },
+          { "id": "006", "code": "space_telescopes", "desc": "Space Telescopes", "label": "Space Telescopes" },
+          { "id": "007", "code": "rovers_mars", "desc": "Mars Rover Missions", "label": "Mars Rover Missions" },
+          { "id": "008", "code": "exoplanet_discovery", "desc": "Exoplanet Discovery", "label": "Exoplanet Discovery" },
+          { "id": "009", "code": "heliophysics", "desc": "Heliophysics Research", "label": "Heliophysics Research" },
+          { "id": "010", "code": "lunar_landings", "desc": "Lunar Landings", "label": "Lunar Landings" },
+          { "id": "011", "code": "orbital_science", "desc": "Orbital Science", "label": "Orbital Science" },
+          { "id": "012", "code": "space_walks", "desc": "Space Walks (EVA)", "label": "Space Walks (EVA)" },
+          { "id": "013", "code": "space_missions", "desc": "Space Missions", "label": "Space Missions" },
+          { "id": "014", "code": "nasa_tech_innovation", "desc": "NASA Technological Innovations", "label": "NASA Technological Innovations" },
+          { "id": "015", "code": "deep_space_exploration", "desc": "Deep Space Exploration", "label": "Deep Space Exploration" },
+          { "id": "016", "code": "rocket_development", "desc": "Rocket Development", "label": "Rocket Development" },
+          { "id": "017", "code": "astrobiology", "desc": "Astrobiology Research", "label": "Astrobiology Research" },
+          { "id": "018", "code": "space_education", "desc": "Space Education Programs", "label": "Space Education Programs" },
+          { "id": "019", "code": "commercial_partnerships", "desc": "NASA Commercial Partnerships", "label": "NASA Commercial Partnerships" },
+          // More options can be added
+        ],
+      };
+
+      window.onload = function (){
+        // Initialize input field with a default value (optional)
+        initinputac("select_option1", "var");
+        initinputac("select_option2", "Mission");
+        initinputac("select_option3", "only");
+        initinputac("select_option4", "sales");
+        initinputac("select_option5", "nasa");
+      };
+    </script>
+
+  </body>
+</html>
