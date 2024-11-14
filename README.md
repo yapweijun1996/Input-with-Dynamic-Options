@@ -6,8 +6,7 @@ This project features a dynamic input text field with auto-complete functionalit
 ## Usage
 1. Open the `index.html` file in your preferred web browser.
 2. Start typing in any of the input fields to see suggestions based on the initial options defined in the script.
-3. Use the arrow keys to navigate through the suggestions.
-4. Press Enter to select a suggestion.
+3. Press Enter to select a suggestion.
 
 ## Features
 - Dynamic suggestions for each input field.
